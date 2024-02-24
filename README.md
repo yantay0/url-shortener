@@ -18,7 +18,8 @@ At a high level, the URL shortener executes the following operations:
 
 
 ## Structure of entities in the database
-![image](https://github.com/yantay0/url-shortener/assets/93054482/59f8bfac-fa69-4d1a-a1d6-36f5cde5ded5)
+![Untitled](https://github.com/yantay0/url-shortener/assets/93054482/63891e8d-fe1d-4cd3-bf65-4b52f53de857)
+
 
 ## High-level system design
 ![image](https://github.com/yantay0/url-shortener/assets/93054482/11b77a99-c41e-40ff-8710-24915dbfbc44)
