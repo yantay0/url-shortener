@@ -1,21 +1,36 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"log/slog"
 	"os"
 
-	"github.com/joho/godotenv"
+	"github.com/yantay0/url-shortener/internal/config"
 )
 
-func initEnv() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
-}
+const (
+	envLocal = "local"
+	envDev   = "dev"
+	envProd  = "prod"
+)
 
 func main() {
-	initEnv()
-	fmt.Printf("port is %s\n", os.Getenv("SERVER_PORT"))
+
+	cfg := config.MustLoad()
+
+	log := setupLogger(cfg.Env)
+	log = log.With(slog.String("env", cfg.Env)) // current env is added to each log
+
+	log.Info("starting app")
+	log.Debug("debug messages are enabled")
+}
+
+func setupLogger(env string) *slog.Logger {
+	var log *slog.Logger
+	switch env {
+	case envLocal:
+		log = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+
+		// envDev, envProd
+	}
+	return log
 }
