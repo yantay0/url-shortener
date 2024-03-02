@@ -1,0 +1,8 @@
+ALTER TABLE
+    users DROP CONSTRAINT IF EXISTS check_role;
+
+ALTER TABLE
+    users DROP CONSTRAINT IF EXISTS unique_username;
+
+ALTER TABLE
+    urls DROP CONSTRAINT IF EXISTS url_format_check;
