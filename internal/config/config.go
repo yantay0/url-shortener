@@ -2,36 +2,47 @@ package config
 
 import (
 	"log"
+	"os"
 	"time"
 
-	"github.com/caarlos0/env"
-	"github.com/joho/godotenv"
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Config struct {
-	Env         string `env:"ENV" env-default:"develepment"`
-	StoragePath string `env:"STORAGE_PATH" env-required:"true"`
-	HTTPServer  HTTPServer
+	Env        string `yaml:"env" env-default:"local"`
+	DB         `yaml:"db"`
+	HTTPServer `yaml:"http_server"`
+}
+
+type DB struct {
+	Dsn          string `yaml:"dsn" env-required:"true"`
+	MaxOpenConns int    `yaml:"maxOpenConns" env-default:"25"`
+	MaxIdleConns int    `yaml:"maxIdleConns" env-default:"25"`
+	MaxIdleTime  string `yaml:"maxIdleTime" env-default:"15m"`
 }
 
 type HTTPServer struct {
-	Host        string        `env:"HOST" env-default:"0.0.0.0"`
-	Port        string        `env:"PORT" env-default:"8080"`
-	Timeout     time.Duration `env:"SERVER_TIMEOUT" env-default:"5s"`
-	IdleTimeout time.Duration `env:"IDLE_TIMEOUT" env-default:"60s"`
+	Address     string        `yaml:"address" env-default:"localhost:8080"`
+	Timeout     time.Duration `yaml:"timeout" env-default:"4s"`
+	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 }
 
-func MustLoad() Config {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("unable to load .env file: %e", err)
+func MustLoad() *Config {
+	configPath := os.Getenv("CONFIG_PATH")
+	if configPath == "" {
+		log.Fatal("CONFIG_PATH is not set")
+	}
+
+	// check if file exists
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		log.Fatalf("config file does not exist: %s", configPath)
 	}
 
 	var cfg Config
 
-	err = env.Parse(&cfg)
-	if err != nil {
-		log.Fatalf("unable to parse ennvironment variables: %e", err)
+	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
+		log.Fatalf("cannot read config: %s", err)
 	}
-	return cfg
+
+	return &cfg
 }
