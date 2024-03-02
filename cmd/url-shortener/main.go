@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/yantay0/url-shortener/internal/config"
+	"github.com/yantay0/url-shortener/internal/repository/postgres"
 )
 
 const (
@@ -22,8 +23,26 @@ func main() {
 
 	log.Info("starting app")
 	log.Debug("debug messages are enabled")
-}
 
+	repository, err := postgres.OpenDB(cfg)
+	if err != nil {
+		log.Error(err.Error())
+		os.Exit(1)
+	}
+	_ = repository
+
+	// 	db, err := openDB(cfg)
+	// 	if err != nil {
+	// 		log.Error(err.Error())
+	// 	}
+
+	// defer func() {
+	// 	if err := db.Close(); err != nil {
+	// 		log.Error(err.Error())
+	// 	}
+	// }()
+
+}
 func setupLogger(env string) *slog.Logger {
 	var log *slog.Logger
 	switch env {
