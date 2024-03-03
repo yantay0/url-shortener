@@ -11,7 +11,7 @@ import (
 )
 
 type Repository struct {
-	db *sql.DB
+	Db *sql.DB
 }
 
 func OpenDB(cfg *config.Config) (*Repository, error) {
@@ -39,5 +39,5 @@ func OpenDB(cfg *config.Config) (*Repository, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return &Repository{db: db}, nil
+	return &Repository{Db: db}, nil
 }
