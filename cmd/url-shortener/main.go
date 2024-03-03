@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/yantay0/url-shortener/internal/config"
-	"github.com/yantay0/url-shortener/internal/data"
 	sl "github.com/yantay0/url-shortener/internal/lib/logger"
 	"github.com/yantay0/url-shortener/internal/repository/postgres"
 )
@@ -25,7 +24,6 @@ const (
 type application struct {
 	config config.Config
 	logger *slog.Logger
-	models data.Models
 }
 
 func main() {
@@ -33,7 +31,6 @@ func main() {
 	log := setupLogger(cfg.Env)
 
 	log = log.With(slog.String("env", cfg.Env)) // current env is added to each log
-	log.Info("starting app")
 	log.Debug("debug messages are enabled")
 
 	repository, err := postgres.OpenDB(cfg)
@@ -42,12 +39,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	defer repository.Db.Close()
+	defer repository.DB.Close()
 
 	app := &application{
 		config: *cfg,
 		logger: log,
-		models: data.NewModels(repository.Db),
 	}
 
 	mux := http.NewServeMux()
@@ -61,9 +57,8 @@ func main() {
 		WriteTimeout: 30 * time.Second,
 	}
 
-	log.Info("starting %s server on %d", cfg.Env, cfg.HTTPServer.Port)
-	// err := srv.ListenAndServe()
 	err = srv.ListenAndServe()
+	log.Info("starting app")
 	log.Error("failed to start server", sl.Err(err))
 
 }
