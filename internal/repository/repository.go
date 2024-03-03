@@ -5,6 +5,19 @@ import (
 )
 
 var (
-	ErrURLNotFound = errors.New("url not found")
-	ErrURLExists   = errors.New("url already exists")
+	ErrRecordNotFound = errors.New("record not found")
 )
+
+// type UrlModel struct {
+// 	DB *sql.DB
+// }
+
+// type Models struct {
+// 	Urls UrlModel
+// }
+
+// func NewModels(db *sql.DB) Models {
+// 	return Models{
+// 		Urls: UrlModel{DB: db},
+// 	}
+// }
