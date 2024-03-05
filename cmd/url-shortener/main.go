@@ -7,9 +7,13 @@ import (
 	"os"
 	"time"
 
+	api "github.com/yantay0/url-shortener/internal/api"
 	"github.com/yantay0/url-shortener/internal/config"
-	sl "github.com/yantay0/url-shortener/internal/lib/logger"
-	"github.com/yantay0/url-shortener/internal/repository/postgres"
+	"github.com/yantay0/url-shortener/internal/storage"
+
+	"github.com/yantay0/url-shortener/internal/lib/logger/handler/slogpretty"
+	"github.com/yantay0/url-shortener/internal/lib/logger/sl"
+	"github.com/yantay0/url-shortener/internal/storage/postgres"
 )
 
 // @title URL-shortener
@@ -21,11 +25,6 @@ const (
 	envProd  = "prod"
 )
 
-type application struct {
-	config config.Config
-	logger *slog.Logger
-}
-
 func main() {
 	cfg := config.MustLoad()
 	log := setupLogger(cfg.Env)
@@ -33,43 +32,60 @@ func main() {
 	log = log.With(slog.String("env", cfg.Env)) // current env is added to each log
 	log.Debug("debug messages are enabled")
 
-	repository, err := postgres.OpenDB(cfg)
+	db, err := postgres.OpenDB(cfg)
 	if err != nil {
 		log.Error("failed to open db connection", sl.Err(err))
 		os.Exit(1)
 	}
 
-	defer repository.DB.Close()
-
-	app := &application{
-		config: *cfg,
-		logger: log,
-	}
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/v1/healthcheck", app.healthcheckHandler)
+	app := api.NewApp(*cfg, log, storage.NewModels(db))
 
 	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.Port),
-		Handler:      mux,
-		IdleTimeout:  cfg.IdleTimeout,
+		Addr:         fmt.Sprintf(":%s", cfg.HTTPServer.Port),
+		Handler:      app.Routes(),
+		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
 
-	err = srv.ListenAndServe()
-	log.Info("starting app")
-	log.Error("failed to start server", sl.Err(err))
+	defer db.Close()
 
+	log.Info("starting server", cfg.Env, cfg.HTTPServer.Port)
+	err = srv.ListenAndServe()
+	log.Error("failed to start server", sl.Err(err))
 }
 
 func setupLogger(env string) *slog.Logger {
 	var log *slog.Logger
-	switch env {
+	switch envLocal {
 	case envLocal:
-		log = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		log = setupPrettySlog()
 
-		// envDev, envProd
+	case envDev:
+		log = slog.New(
+			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
+		)
+	case envProd:
+		log = slog.New(
+			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}),
+		)
+	default:
+		log = slog.New(
+
+			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}),
+		)
 	}
 	return log
+}
+
+func setupPrettySlog() *slog.Logger {
+	opts := slogpretty.PrettyHandlerOptions{
+		SlogOpts: &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		},
+	}
+
+	handler := opts.NewPrettyHandler(os.Stdout)
+
+	return slog.New(handler)
 }
