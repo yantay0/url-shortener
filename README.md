@@ -16,6 +16,11 @@ At a high level, the URL shortener executes the following operations:
 - Custom alias for URLs
 - Basic analytics (click counts)
 
+## REST API
+- POST /urls
+- GET /urls/:id
+- PUT /urls/:id
+- DELETE /urls/:id
 
 ## Structure of entities in the database
 ![image](https://github.com/yantay0/url-shortener/assets/93054482/0ccaa6ff-92d4-48ec-bb28-5d9cff66a734)
