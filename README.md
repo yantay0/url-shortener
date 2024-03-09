@@ -24,7 +24,8 @@ DELETE /urls/:id
 ```
 
 ## Structure of entities in the database
-![image](https://github.com/yantay0/url-shortener/assets/93054482/0ccaa6ff-92d4-48ec-bb28-5d9cff66a734)
+![image](https://github.com/yantay0/url-shortener/assets/93054482/23a90482-9185-48ec-8b68-7c5887d60a23)
+
 
 
 
