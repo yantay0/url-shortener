@@ -16,7 +16,7 @@ func (app *App) Routes() *httprouter.Router {
 	router.HandlerFunc(http.MethodGet, BASE_URL+"/urls", app.ListUrlsHandler)
 	router.HandlerFunc(http.MethodGet, BASE_URL+"/urls/:id", app.ShowUrlHandler)
 	router.HandlerFunc(http.MethodPost, BASE_URL+"/urls", app.CreateUrlHandler)
-	router.HandlerFunc(http.MethodPut, BASE_URL+"/urls/:id", app.UpdateUrlHandler)
+	router.HandlerFunc(http.MethodPatch, BASE_URL+"/urls/:id", app.UpdateUrlHandler)
 	router.HandlerFunc(http.MethodDelete, BASE_URL+"/urls/:id", app.DeleteUrlHandler)
 	return router
 }

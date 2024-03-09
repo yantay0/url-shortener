@@ -80,8 +80,8 @@ func (app *App) UpdateUrlHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var input struct {
-		Original_url string `json:"original_url"`
-		Short_url    string `json:"short_url"`
+		Original_url *string `json:"original_url"`
+		Short_url    *string `json:"short_url"`
 	}
 
 	err = app.readJson(w, r, &input)
@@ -90,8 +90,10 @@ func (app *App) UpdateUrlHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url.Original_url = input.Original_url
-	url.Short_url = input.Short_url
+	if input.Original_url != nil {
+		url.Original_url = *input.Original_url
+		url.Short_url = *input.Short_url
+	}
 
 	err = app.Storage.Urls.Update(url)
 	if err != nil {
