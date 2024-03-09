@@ -1,16 +1,16 @@
 # Go URL Shortener
 
 ## Overview
+```
 This is a simple URL shortener written in Go. It allows you to shorten long URLs into manageable links that never expire.
-
+```
 ## How does a URL shortener work?
 At a high level, the URL shortener executes the following operations:
-
 - the server generates a unique short URL for each long URL or user creates own custom one
 - the server encodes the short URL for readability
 - the server persists the short URL in the data store
 - the server redirects the client to the original long URL against the short URL
-- 
+
 ## Features
 - Shorten URLs
 - Custom alias for URLs
@@ -22,7 +22,6 @@ POST /urls
 GET /urls/:id
 PUT /urls/:id
 DELETE /urls/:id
-
 ```
 
 ## Structure of entities in the database
