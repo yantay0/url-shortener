@@ -1,8 +1,10 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/yantay0/url-shortener/internal/model"
 )
@@ -17,8 +19,11 @@ func (u *UrlStorage) Insert(url *model.Url) error {
 		VALUES ($1, $2)
 		RETURNING id, created_at, version`
 
-	args := []interface{}{url.Original_url, url.Short_url}
-	return u.DB.QueryRow(query, args...).Scan(&url.ID, &url.Created_at, &url.Version)
+	args := []interface{}{url.OriginalUrl, url.ShortUrl}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	return u.DB.QueryRowContext(ctx, query, args...).Scan(&url.ID, &url.CreatedAt, &url.Version)
 }
 
 func (u *UrlStorage) Get(id int64) (*model.Url, error) {
@@ -32,11 +37,14 @@ func (u *UrlStorage) Get(id int64) (*model.Url, error) {
 		WHERE id = $1`
 
 	var url model.Url
-	err := u.DB.QueryRow(query, id).Scan(
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := u.DB.QueryRowContext(ctx, query, id).Scan(
 		&url.ID,
-		&url.Created_at,
-		&url.Original_url,
-		&url.Short_url,
+		&url.CreatedAt,
+		&url.OriginalUrl,
+		&url.ShortUrl,
 		&url.Version,
 	)
 	if err != nil {
@@ -55,16 +63,29 @@ func (u *UrlStorage) Update(url *model.Url) error {
 	query := `
 		UPDATE url
 		SET original_url = $1, short_url = $2, version = version + 1
-		WHERE id = $3
+		WHERE id = $3 AND version = $4
 		RETURNING version`
 
 	args := []interface{}{
-		url.Original_url,
-		url.Short_url,
+		url.OriginalUrl,
+		url.ShortUrl,
 		url.ID,
+		url.Version,
 	}
 
-	return u.DB.QueryRow(query, args...).Scan(&url.Version)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := u.DB.QueryRowContext(ctx, query, args...).Scan(&url.Version)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrEditConflict
+		default:
+			return err
+		}
+	}
+	return nil
 }
 
 func (u *UrlStorage) Delete(id int64) error {
@@ -76,7 +97,10 @@ func (u *UrlStorage) Delete(id int64) error {
 		DELETE FROM url
 		WHERE id = $1`
 
-	result, err := u.DB.Exec(query, id)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	result, err := u.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
@@ -89,4 +113,39 @@ func (u *UrlStorage) Delete(id int64) error {
 	}
 
 	return nil
+}
+
+func (u *UrlStorage) GetAll(originalUrl, shortUrl string) ([]*model.Url, error) {
+	query := `
+		SELECT id, created_at, original_url, short_url, version
+		FROM url
+		ORDER BY id`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := u.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	urls := []*model.Url{}
+
+	for rows.Next() {
+		var url model.Url
+		err := rows.Scan(
+			&url.ID,
+			&url.CreatedAt,
+			&url.OriginalUrl,
+			&url.ShortUrl,
+			&url.Version,
+		)
+		if err != nil {
+			return nil, err
+		}
+		urls = append(urls, &url)
+	}
+
+	return urls, nil
 }

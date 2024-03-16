@@ -7,12 +7,13 @@ import (
 
 	"github.com/yantay0/url-shortener/internal/model"
 	"github.com/yantay0/url-shortener/internal/storage"
+	"github.com/yantay0/url-shortener/internal/validator"
 )
 
 func (app *App) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Original_url string `json:"original_url"`
-		Short_url    string `json:"short_url"`
+		OriginalUrl string `json:"original_url"`
+		ShortUrl    string `json:"short_url"`
 	}
 
 	err := app.readJson(w, r, &input)
@@ -22,8 +23,8 @@ func (app *App) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := &model.Url{
-		Original_url: input.Original_url,
-		Short_url:    input.Short_url,
+		OriginalUrl: input.OriginalUrl,
+		ShortUrl:    input.ShortUrl,
 	}
 
 	err = app.Storage.Urls.Insert(url)
@@ -37,7 +38,35 @@ func (app *App) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) ListUrlsHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "lsit")
+	var input struct {
+		OriginalUrl string
+		ShortUrl    string
+		Sort        string
+	}
+
+	v := validator.New()
+	qs := r.URL.Query()
+
+	input.OriginalUrl = app.readString(qs, "original_url", "")
+	input.ShortUrl = app.readString(qs, "short_url", "")
+
+	input.Sort = app.readString(qs, "sort", "id")
+
+	if !v.Valid() {
+		app.errorResponse(w, r, 400, "some error")
+		return
+	}
+
+	urls, err := app.Storage.Urls.GetAll(input.OriginalUrl, input.ShortUrl)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.writeJson(w, http.StatusOK, envelope{"urls": urls}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }
 
 func (app *App) ShowUrlHandler(w http.ResponseWriter, r *http.Request) {
@@ -72,6 +101,8 @@ func (app *App) UpdateUrlHandler(w http.ResponseWriter, r *http.Request) {
 	url, err := app.Storage.Urls.Get(id)
 	if err != nil {
 		switch {
+		case errors.Is(err, storage.ErrEditConflict):
+			app.editConflictResponse(w, r)
 		case errors.Is(err, storage.ErrRecordNotFound):
 			app.notFoundResponse(w, r)
 		default:
@@ -80,8 +111,8 @@ func (app *App) UpdateUrlHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var input struct {
-		Original_url *string `json:"original_url"`
-		Short_url    *string `json:"short_url"`
+		OriginalUrl *string `json:"original_url"`
+		ShortUrl    *string `json:"short_url"`
 	}
 
 	err = app.readJson(w, r, &input)
@@ -90,9 +121,12 @@ func (app *App) UpdateUrlHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if input.Original_url != nil {
-		url.Original_url = *input.Original_url
-		url.Short_url = *input.Short_url
+	if input.OriginalUrl != nil {
+		url.OriginalUrl = *input.OriginalUrl
+	}
+
+	if input.ShortUrl != nil {
+		url.ShortUrl = *input.ShortUrl
 	}
 
 	err = app.Storage.Urls.Update(url)
