@@ -11,10 +11,11 @@ var (
 )
 
 type Storage struct {
-	Urls UrlStorage
+	Urls  UrlStorage
+	Users UserStorage
 }
 
-func NewModels(db *sql.DB) Storage {
+func New(db *sql.DB) Storage {
 	return Storage{
 		Urls: UrlStorage{DB: db},
 	}
