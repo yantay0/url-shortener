@@ -9,36 +9,36 @@ import (
 )
 
 type User struct {
-	ID          int64     `json:"id"`
-	CreatedAt   time.Time `json:"created_at"`
-	Name        string    `json:"username"`
-	Email       string    `json:"email"`
-	Password    password  `json:"-"`
-	ActivatedAt bool      `json:"activated"`
-	Version     int       `json:"-"`
+	ID        int64     `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	Name      string    `json:"username"`
+	Email     string    `json:"email"`
+	Password  password  `json:"-"`
+	Activated bool      `json:"activated"`
+	Version   int       `json:"-"`
 }
 
 type password struct {
-	plaintext *string
-	hash      []byte
+	Plaintext *string
+	Hash      []byte
 }
 
-// calculate the bcrypt hash of plaintext password, stores both
+// calculate the bcrypt hash of Plaintext password, stores both
 func (p *password) Set(plaintexPassword string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(plaintexPassword), 12)
 	if err != nil {
 		return err
 	}
 
-	p.plaintext = &plaintexPassword
-	p.hash = hash
+	p.Plaintext = &plaintexPassword
+	p.Hash = hash
 
 	return nil
 }
 
-// check if provided plaintext password matches to hashed one
+// check if provided Plaintext password matches to hashed one
 func (p *password) Matches(plaintexPassword string) (bool, error) {
-	err := bcrypt.CompareHashAndPassword(p.hash, []byte(plaintexPassword))
+	err := bcrypt.CompareHashAndPassword(p.Hash, []byte(plaintexPassword))
 	if err != nil {
 		switch {
 		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
@@ -68,12 +68,12 @@ func ValidateUser(v *validator.Validator, user *User) {
 
 	ValidateEmail(v, user.Email)
 
-	if user.Password.plaintext != nil {
-		ValidatePassword(v, *user.Password.plaintext)
+	if user.Password.Plaintext != nil {
+		ValidatePassword(v, *user.Password.Plaintext)
 	}
 
 	// If the password hash is ever nil
-	if user.Password.hash == nil {
+	if user.Password.Hash == nil {
 		panic("missing password hash for user")
 	}
 }
