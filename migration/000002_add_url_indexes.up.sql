@@ -1,0 +1,2 @@
+CREATE INDEX IF NOT EXISTS urls_original_url_idx ON url USING GIN (to_tsvector('simple', original_url));
+CREATE INDEX IF NOT EXISTS urls_short_url_idx ON url USING GIN (to_tsvector('simple', short_url));
