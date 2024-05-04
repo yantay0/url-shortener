@@ -6,7 +6,10 @@ import (
 )
 
 func (app *App) logError(r *http.Request, err error) {
-	app.Logger.Info(err.Error())
+	app.Logger.PrintError(err, map[string]string{
+		"request_method": r.Method,
+		"request_url":    r.URL.String(),
+	})
 }
 
 func (app *App) errorResponse(w http.ResponseWriter, r *http.Request, status int, message interface{}) {
@@ -44,6 +47,6 @@ func (app *App) editConflictResponse(w http.ResponseWriter, r *http.Request) {
 	app.errorResponse(w, r, http.StatusConflict, message)
 }
 
-func (app *App) ailedValidationResponse(w http.ResponseWriter, r *http.Request, errors map[string]string) {
+func (app *App) failedValidationResponse(w http.ResponseWriter, r *http.Request, errors map[string]string) {
 	app.errorResponse(w, r, http.StatusUnprocessableEntity, errors)
 }
