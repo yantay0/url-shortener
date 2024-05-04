@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/yantay0/url-shortener/internal/model"
@@ -15,11 +16,11 @@ type UrlStorage struct {
 
 func (s *UrlStorage) Insert(url *model.Url) error {
 	query := `
-		INSERT INTO url (original_url, short_url)
-		VALUES ($1, $2)
+		INSERT INTO url (original_url, short_url, user_id)
+		VALUES ($1, $2, $3)
 		RETURNING id, created_at, version`
 
-	args := []interface{}{url.OriginalUrl, url.ShortUrl}
+	args := []interface{}{url.OriginalUrl, url.ShortUrl, url.UserId}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -118,17 +119,22 @@ func (s *UrlStorage) Delete(id int64) error {
 	return nil
 }
 
-func (s *UrlStorage) GetAll(originalUrl, shortUrl string) ([]*model.Url, error) {
-	query := `
+func (s *UrlStorage) GetAll(originalUrl, shortUrl string, filters model.Filters) ([]*model.Url, error) {
+	// order by id for the consistent ordering
+	query := fmt.Sprintf(`
 		SELECT id, created_at, original_url, short_url, version
 		FROM url
-		ORDER BY id`
+		WHERE (LOWER(original_url) = LOWER($1) OR $1 = '')
+		AND (LOWER(short_url) = LOWER($2) OR $2 = '')
+		ORDER BY %s %s, id ASC
+		LIMIT $3 OFFSET $4`, filters.SortColumn(), filters.SortDirection())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := s.DB.QueryContext(ctx, query)
+	args := []interface{}{originalUrl, shortUrl, filters.Limit(), filters.Offset()}
 
+	rows, err := s.DB.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -151,6 +157,10 @@ func (s *UrlStorage) GetAll(originalUrl, shortUrl string) ([]*model.Url, error) 
 			return nil, err
 		}
 		urls = append(urls, &url)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return urls, nil

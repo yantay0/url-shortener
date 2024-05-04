@@ -14,6 +14,7 @@ func (app *App) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		OriginalUrl string `json:"original_url"`
 		ShortUrl    string `json:"short_url"`
+		UserId      int64  `json:"user_id"`
 	}
 
 	err := app.readJson(w, r, &input)
@@ -25,6 +26,7 @@ func (app *App) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
 	url := &model.Url{
 		OriginalUrl: input.OriginalUrl,
 		ShortUrl:    input.ShortUrl,
+		UserId:      input.UserId,
 	}
 
 	err = app.Storage.Urls.Insert(url)
@@ -41,7 +43,7 @@ func (app *App) ListUrlsHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		OriginalUrl string
 		ShortUrl    string
-		Sort        string
+		model.Filters
 	}
 
 	v := validator.New()
@@ -50,14 +52,18 @@ func (app *App) ListUrlsHandler(w http.ResponseWriter, r *http.Request) {
 	input.OriginalUrl = app.readString(qs, "original_url", "")
 	input.ShortUrl = app.readString(qs, "short_url", "")
 
-	input.Sort = app.readString(qs, "sort", "id")
+	input.Filters.Page = app.readInt(qs, "page", 1, v)
+	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
 
-	if !v.Valid() {
-		app.errorResponse(w, r, 400, "some error")
+	input.Filters.Sort = app.readString(qs, "sort", "id")
+	input.Filters.SortSafelist = []string{"id", "original_url", "short_url", "-id", "-original_url", "-short_url"}
+
+	if model.ValidateFilters(v, input.Filters); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
-	urls, err := app.Storage.Urls.GetAll(input.OriginalUrl, input.ShortUrl)
+	urls, err := app.Storage.Urls.GetAll(input.OriginalUrl, input.ShortUrl, input.Filters)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
