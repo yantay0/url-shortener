@@ -1,6 +1,7 @@
 package model
 
 import (
+	"math"
 	"strings"
 
 	"github.com/yantay0/url-shortener/internal/validator"
@@ -13,6 +14,27 @@ type Filters struct {
 	SortSafelist []string
 }
 
+type Metadata struct {
+	CurrentPage  int `json:"current_page,omitempty"`
+	PageSize     int `json:"page_size,omitempty"`
+	FirstPage    int `json:"first_page,omitempty"`
+	LastPage     int `json:"last_page,omitempty"`
+	TotalRecords int `json:"total_records,omitempty"`
+}
+
+func CalculateMetadata(totalRecords, page, pageSize int) Metadata {
+	if totalRecords == 0 {
+		// Note that we return an empty Metadata struct if there are no records.
+		return Metadata{}
+	}
+	return Metadata{
+		CurrentPage:  page,
+		PageSize:     pageSize,
+		FirstPage:    1,
+		LastPage:     int(math.Ceil(float64(totalRecords) / float64(pageSize))),
+		TotalRecords: totalRecords,
+	}
+}
 func (f Filters) SortColumn() string {
 	for _, safeValue := range f.SortSafelist {
 		if f.Sort == safeValue {
@@ -37,6 +59,7 @@ func (f Filters) Limit() int {
 func (f Filters) Offset() int {
 	return (f.Page - 1) * f.PageSize
 }
+
 func ValidateFilters(v *validator.Validator, f Filters) {
 	// Check that the page and page_size parameters contain sensible values.
 	v.Check(f.Page > 0, "page", "must be greater than zero")

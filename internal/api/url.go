@@ -63,13 +63,13 @@ func (app *App) ListUrlsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	urls, err := app.Storage.Urls.GetAll(input.OriginalUrl, input.ShortUrl, input.Filters)
+	urls, metadata, err := app.Storage.Urls.GetAll(input.OriginalUrl, input.ShortUrl, input.Filters)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
-	err = app.writeJson(w, http.StatusOK, envelope{"urls": urls}, nil)
+	err = app.writeJson(w, http.StatusOK, envelope{"urls": urls, "metadata": metadata}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

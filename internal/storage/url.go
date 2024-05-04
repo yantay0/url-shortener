@@ -119,10 +119,10 @@ func (s *UrlStorage) Delete(id int64) error {
 	return nil
 }
 
-func (s *UrlStorage) GetAll(originalUrl, shortUrl string, filters model.Filters) ([]*model.Url, error) {
+func (s *UrlStorage) GetAll(originalUrl, shortUrl string, filters model.Filters) ([]*model.Url, model.Metadata, error) {
 	// order by id for the consistent ordering
 	query := fmt.Sprintf(`
-		SELECT id, created_at, original_url, short_url, version
+		SELECT count(*) OVER(), id, created_at, original_url, short_url, version
 		FROM url
 		WHERE (LOWER(original_url) = LOWER($1) OR $1 = '')
 		AND (LOWER(short_url) = LOWER($2) OR $2 = '')
@@ -136,16 +136,18 @@ func (s *UrlStorage) GetAll(originalUrl, shortUrl string, filters model.Filters)
 
 	rows, err := s.DB.QueryContext(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, model.Metadata{}, err
 	}
 
 	defer rows.Close()
 
+	totalRecords := 0
 	urls := []*model.Url{}
 
 	for rows.Next() {
 		var url model.Url
 		err := rows.Scan(
+			&totalRecords,
 			&url.ID,
 			&url.CreatedAt,
 			&url.OriginalUrl,
@@ -154,14 +156,16 @@ func (s *UrlStorage) GetAll(originalUrl, shortUrl string, filters model.Filters)
 		)
 
 		if err != nil {
-			return nil, err
+			return nil, model.Metadata{}, err
 		}
 		urls = append(urls, &url)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, model.Metadata{}, err
 	}
 
-	return urls, nil
+	metadata := model.CalculateMetadata(totalRecords, filters.Page, filters.PageSize)
+
+	return urls, metadata, nil
 }
