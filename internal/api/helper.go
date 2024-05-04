@@ -31,7 +31,7 @@ func (app *App) readIDParam(r *http.Request) (int64, error) {
 	return id, nil
 }
 
-func (app *App) writeJson(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
+func (app *App) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
 	js, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func (app *App) writeJson(w http.ResponseWriter, status int, data envelope, head
 	return nil
 }
 
-func (app *App) readJson(w http.ResponseWriter, r *http.Request, dst interface{}) error {
+func (app *App) readJSON(w http.ResponseWriter, r *http.Request, dst interface{}) error {
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBodyBytes))
 
 	dec := json.NewDecoder(r.Body)
@@ -99,16 +99,6 @@ func (app *App) readString(qs url.Values, key string, defaultValue string) strin
 
 	return s
 
-}
-
-func (app *App) readCSV(qs url.Values, key string, defaultValue []string) []string {
-	csv := qs.Get(key)
-
-	if csv == "" {
-		return defaultValue
-	}
-
-	return strings.Split(csv, ",")
 }
 
 func (app *App) readInt(qs url.Values, key string, defaultValue int, v *validator.Validator) int {

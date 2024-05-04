@@ -11,13 +11,15 @@ var (
 )
 
 type Storage struct {
-	Urls  UrlStorage
-	Users UserStorage
+	Urls   UrlStorage
+	Tokens TokenModel
+	Users  UserStorage
 }
 
 func New(db *sql.DB) Storage {
 	return Storage{
-		Urls:  UrlStorage{DB: db},
-		Users: UserStorage{DB: db},
+		Urls:   UrlStorage{DB: db},
+		Tokens: TokenModel{DB: db},
+		Users:  UserStorage{DB: db},
 	}
 }

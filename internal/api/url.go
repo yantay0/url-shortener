@@ -17,7 +17,7 @@ func (app *App) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
 		UserId      int64  `json:"user_id"`
 	}
 
-	err := app.readJson(w, r, &input)
+	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
@@ -69,7 +69,7 @@ func (app *App) ListUrlsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.writeJson(w, http.StatusOK, envelope{"urls": urls, "metadata": metadata}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"urls": urls, "metadata": metadata}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
@@ -93,7 +93,7 @@ func (app *App) ShowUrlHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.writeJson(w, http.StatusOK, envelope{"url": url}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"url": url}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
@@ -121,7 +121,7 @@ func (app *App) UpdateUrlHandler(w http.ResponseWriter, r *http.Request) {
 		ShortUrl    *string `json:"short_url"`
 	}
 
-	err = app.readJson(w, r, &input)
+	err = app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
@@ -141,7 +141,7 @@ func (app *App) UpdateUrlHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.writeJson(w, http.StatusOK, envelope{"url": url}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"url": url}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
@@ -165,7 +165,7 @@ func (app *App) DeleteUrlHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.writeJson(w, http.StatusOK, envelope{"message": "success.url is deleted"}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"message": "success.url is deleted"}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
