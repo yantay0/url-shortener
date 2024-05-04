@@ -8,6 +8,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var AnonymousUser = &User{}
+
 type User struct {
 	ID        int64     `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
@@ -21,6 +23,11 @@ type User struct {
 type password struct {
 	Plaintext *string
 	Hash      []byte
+}
+
+// Check if a User instance is the AnonymousUser.
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
 }
 
 // calculate the bcrypt hash of Plaintext password, stores both
@@ -56,9 +63,9 @@ func ValidateEmail(v *validator.Validator, email string) {
 	v.Check(validator.Matches(email, validator.EmailRX), "email", "must be a valid email address")
 }
 
-func ValidatePassword(v *validator.Validator, password string) {
+func ValidatePasswordPlaintext(v *validator.Validator, password string) {
 	v.Check(password != "", "password", "must be provided")
-	v.Check(len(password) >= 8, "password", "must be at least 8 bytes")
+	v.Check(len(password) >= 8, "password", "must be at least 8 bytes long")
 	v.Check(len(password) <= 72, "password", "must not be more than 72 bytes long")
 }
 
@@ -69,7 +76,7 @@ func ValidateUser(v *validator.Validator, user *User) {
 	ValidateEmail(v, user.Email)
 
 	if user.Password.Plaintext != nil {
-		ValidatePassword(v, *user.Password.Plaintext)
+		ValidatePasswordPlaintext(v, *user.Password.Plaintext)
 	}
 
 	// If the password hash is ever nil

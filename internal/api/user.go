@@ -89,7 +89,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		// Create map to act as a 'holding structure' for the data we send to the weclome email
 		// template.
 		data := map[string]interface{}{
-			"activationToken": token.PlainText,
+			"activationToken": token.Plaintext,
 			"userID":          user.ID,
 		}
 

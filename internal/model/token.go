@@ -14,11 +14,11 @@ const (
 )
 
 type Token struct {
-	PlainText string
-	Hash      []byte
-	UserID    int64
-	Expiry    time.Time
-	Scope     string
+	Plaintext string    `json:"token"`
+	Hash      []byte    `json:"-"`
+	UserID    int64     `json:"-"`
+	Expiry    time.Time `json:"expiry"`
+	Scope     string    `json:"-"`
 }
 
 func GenerateToken(userID int64, ttl time.Duration, scope string) (*Token, error) {
@@ -35,9 +35,9 @@ func GenerateToken(userID int64, ttl time.Duration, scope string) (*Token, error
 		return nil, err
 	}
 
-	token.PlainText = base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(randomBytes)
+	token.Plaintext = base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(randomBytes)
 
-	hash := sha256.Sum256([]byte(token.PlainText))
+	hash := sha256.Sum256([]byte(token.Plaintext))
 	token.Hash = hash[:]
 
 	return token, nil

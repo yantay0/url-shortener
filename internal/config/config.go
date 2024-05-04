@@ -13,6 +13,7 @@ type Config struct {
 	DB         `yaml:"db"`
 	HTTPServer `yaml:"http_server"`
 	SMTP       `yaml:"smtp"`
+	Limiter    `yaml:"limiter"`
 }
 
 type SMTP struct {
@@ -35,6 +36,12 @@ type HTTPServer struct {
 	Port        string        `yaml:"port" env-default:"8080"`
 	Timeout     time.Duration `yaml:"timeout" env-default:"4s"`
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
+}
+
+type Limiter struct {
+	RPS     float64 `yaml:"rps" env-default:"2"` // Rate limiter maximum requests per second
+	Burst   int     `yaml:"burst" env-default:"4"`
+	Enabled bool    `yaml:"enabled" env-default:"true"`
 }
 
 func MustLoad() *Config {

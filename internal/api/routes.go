@@ -23,5 +23,7 @@ func (app *App) Routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, BASE_URL+"/users", app.registerUserHandler)
 	router.HandlerFunc(http.MethodPut, BASE_URL+"/users/activated", app.activateUserHandler)
 
-	return app.recoverPanic(router)
+	router.HandlerFunc(http.MethodPost, BASE_URL+"/tokens/authentication", app.createAuthenticationTokenHandler)
+
+	return app.recoverPanic(app.rateLimit(app.authenticate(router)))
 }
