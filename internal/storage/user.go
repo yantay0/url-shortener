@@ -107,7 +107,7 @@ func (s UserStorage) Update(user *model.User) error {
 	return nil
 }
 
-func (m UserStorage) GetForToken(tokenScope, tokenPlaintext string) (*model.User, error) {
+func (s UserStorage) GetForToken(tokenScope, tokenPlaintext string) (*model.User, error) {
 	// Calculate the SHA-256 hash for the plaintext token provided by the client.
 	// Note, that this will return a byte *array* with length 32, not a slice.
 	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
@@ -139,7 +139,7 @@ func (m UserStorage) GetForToken(tokenScope, tokenPlaintext string) (*model.User
 
 	// Execute the query, scanning the return values into a User struct. If no matching record
 	// is found we return an ErrRecordNotFound error.
-	err := m.DB.QueryRowContext(ctx, query, args...).Scan(
+	err := s.DB.QueryRowContext(ctx, query, args...).Scan(
 		&user.ID,
 		&user.CreatedAt,
 		&user.Name,

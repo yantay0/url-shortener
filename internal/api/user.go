@@ -25,10 +25,6 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Copy the data from the request body into a new User struct. Notice also that
-	// we set the Activated field to false, which isn't strictly necessary because
-	// the Activated field will have the zero-value of false by default. But setting
-	// this explicitly helps to make our intentions clear to anyone reading the code.
 	user := &model.User{
 		Name:      input.Name,
 		Email:     input.Email,
@@ -45,20 +41,14 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	v := validator.New()
 
-	// Validate the user struct and return the error messages to the client if
-	// any of the checks fail.
 	if model.ValidateUser(v, user); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
-	// Insert the user data into the database.
 	err = app.Storage.Users.Insert(user)
 	if err != nil {
 		switch {
-		// If we get an ErrDuplicateEmail error, use the v.AddError() method to manually add
-		// a message to the validator instance, and then call our failedValidationResponse
-		// helper().
 		case errors.Is(err, storage.ErrDuplicateEmail):
 			v.AddError("email", "a user with this email address already exists")
 			app.failedValidationResponse(w, r, v.Errors)
@@ -68,12 +58,11 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Add the "movies:read" permission for the new user.
-	// err = app.model.Permissions.AddForUser(user.ID, "movies:read")
-	// if err != nil {
-	// 	app.serverErrorResponse(w, r, err)
-	// 	return
-	// }
+	err = app.Storage.Permissions.AddForUser(user.ID, "urls:read")
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
 
 	// After the user record has been created in the database, generate a new activation
 	// token for the user.
@@ -104,9 +93,6 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	})
 
-	// Note that we also change this to send the client a 202 Accepted status code which
-	// indicates that the request has been accepted for processing, but the processing has
-	// not been completed.
 	err = app.writeJSON(w, http.StatusAccepted, envelope{"user": user}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
