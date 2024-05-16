@@ -58,7 +58,7 @@ func (app *App) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.Storage.Permissions.AddForUser(user.ID, "urls:read")
+	err = app.Storage.Permissions.AddForUser(user.ID, "shortenings:read")
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

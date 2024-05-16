@@ -11,7 +11,7 @@ var (
 )
 
 type Storage struct {
-	Urls        UrlStorage
+	Shortenings ShorteningsStorage
 	Permissions PermissionsStorage
 	Tokens      TokenStorage
 	Users       UserStorage
@@ -19,7 +19,7 @@ type Storage struct {
 
 func New(db *sql.DB) Storage {
 	return Storage{
-		Urls:        UrlStorage{DB: db},
+		Shortenings: ShorteningsStorage{DB: db},
 		Permissions: PermissionsStorage{DB: db},
 		Tokens:      TokenStorage{DB: db},
 		Users:       UserStorage{DB: db},
