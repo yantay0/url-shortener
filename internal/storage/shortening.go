@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/yantay0/url-shortener/internal/model"
@@ -67,7 +68,7 @@ func (s *ShorteningsStorage) Get(identifier string) (*model.Shortening, error) {
 
 func (s *ShorteningsStorage) Update(shortening *model.Shortening) error {
 	query := `
-		UPDATE url
+		UPDATE shortening
 		SET original_url = $1, version = version + 1
 		WHERE identifier = $2 AND version = $3
 		RETURNING version`
@@ -224,6 +225,61 @@ func (s *ShorteningsStorage) SaveUserShortening(shortening *model.Shortening) er
 	args := []interface{}{shortening.Identifier, shortening.OriginalURL, shortening.UserID}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
+	err := s.DB.QueryRowContext(ctx, query, args...).Scan(&shortening.Identifier, &shortening.CreatedAt, &shortening.Version)
+	if err != nil {
+		switch {
+		case strings.Contains(err.Error(), `duplicate key value violates unique constraint`):
+			return ErrIdentifierExists
+		default:
+			return err
+		}
+	}
+	return nil
+}
 
-	return s.DB.QueryRowContext(ctx, query, args...).Scan(&shortening.Identifier, &shortening.CreatedAt, &shortening.Version)
+func (s *ShorteningsStorage) GetOriginalUrl(identifier string) (*model.Shortening, error) {
+	if identifier == "" {
+		return nil, ErrRecordNotFound
+	}
+
+	// Start a new transaction
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback() // Rollback if any error occurs
+
+	// First, try to get the original URL
+	query := `
+		SELECT original_url, visits
+		FROM shortening 
+		WHERE identifier = $1`
+	var shortening model.Shortening
+	err = tx.QueryRow(query, identifier).Scan(&shortening.OriginalURL, &shortening.Visits)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrRecordNotFound
+		} else {
+			return nil, err
+		}
+	}
+
+	// If we got here without error, it means the record exists
+	// Now, update the visits count
+	updateQuery := `
+		UPDATE shortening
+		SET visits = visits + 1
+		WHERE identifier = $1`
+	_, err = tx.Exec(updateQuery, identifier)
+	if err != nil {
+		return nil, err
+	}
+
+	// Commit the transaction
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	return &shortening, nil
 }
