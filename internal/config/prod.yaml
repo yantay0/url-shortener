@@ -1,6 +1,6 @@
 env: "local"
 db:
- dsn: "postgresql://madina:2626@localhost:5432/url_shortener?sslmode=disable"
+ dsn: "postgresql://url_shortener:2626@localhost:5432/url_shortener?sslmode=disable"
  maxOpenConns: 25
  maxIdleConns: 25
  maxIdleTime: "15m"

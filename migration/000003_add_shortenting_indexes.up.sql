@@ -1,2 +1,0 @@
-CREATE INDEX IF NOT EXISTS shortening_original_url_idx ON shortening USING GIN (to_tsvector('simple', original_url));
-CREATE INDEX IF NOT EXISTS shortening_identifier_idx ON shortening USING GIN (to_tsvector('simple', identifier));

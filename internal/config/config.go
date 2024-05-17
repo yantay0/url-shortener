@@ -45,7 +45,7 @@ type Limiter struct {
 }
 
 func MustLoad() *Config {
-	configPath := os.Getenv("CONFIG_PATH")
+	configPath := "./internal/config/prod.yaml"
 	if configPath == "" {
 		log.Fatal("CONFIG_PATH is not set")
 	}
