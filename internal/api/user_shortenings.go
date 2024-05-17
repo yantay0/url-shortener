@@ -30,8 +30,6 @@ func (app *App) listUserShorteningsHandler(w http.ResponseWriter, r *http.Reques
 func (app *App) createShorteningFromURLHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		OriginalURL string `json:"original_url"`
-		// Identifier  string `json:"identifier"`
-		// UserID      int64  `json:"user_id"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -43,7 +41,6 @@ func (app *App) createShorteningFromURLHandler(w http.ResponseWriter, r *http.Re
 	shorten := model.GenerateShortening()
 
 	baseURL := fmt.Sprintf("http://%s:%s", app.Config.IpAdress, app.Config.HTTPServer.Port)
-	// http: //localhost:8085/api/v1
 
 	shorterning := &model.Shortening{
 		OriginalURL: input.OriginalURL,
@@ -57,34 +54,9 @@ func (app *App) createShorteningFromURLHandler(w http.ResponseWriter, r *http.Re
 	}
 	headers := make(http.Header)
 	headers.Set("Location", fmt.Sprintf("api/v1/shorternings/%s", shorterning.Identifier))
-	fmt.Fprintf(w, "%+v\n", shortURL)
+
+	err = app.writeJSON(w, http.StatusCreated, envelope{"short_url": shortURL}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }
-
-// func (app *App) CreateShorterningHandler(w http.ResponseWriter, r *http.Request) {
-// 	var input struct {
-// 		OriginalURL string `json:"original_shorterning"`
-// 		Identifier  string `json:"identifier"`
-// 		UserID      int64  `json:"user_id"`
-// 	}
-
-// 	err := app.readJSON(w, r, &input)
-// 	if err != nil {
-// 		app.badRequestResponse(w, r, err)
-// 		return
-// 	}
-
-// 	shorterning := &model.Shortening{
-// 		OriginalURL: input.OriginalURL,
-// 		Identifier:  input.Identifier,
-// 		UserID:      input.UserID,
-// 	}
-
-// 	err = app.Storage.Shortenings.Insert(shorterning)
-// 	if err != nil {
-// 		app.serverErrorResponse(w, r, err)
-// 		return
-// 	}
-// 	headers := make(http.Header)
-// 	headers.Set("Location", fmt.Sprintf("api/v1/shorternings/%s", shorterning.Identifier))
-// 	fmt.Fprintf(w, "%+v\n", input)
-// }
