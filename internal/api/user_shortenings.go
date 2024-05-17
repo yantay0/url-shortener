@@ -28,11 +28,17 @@ func (app *App) listUserShorteningsHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *App) createShorteningFromURLHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := app.readIDParam(r)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
 	var input struct {
 		OriginalURL string `json:"original_url"`
 	}
 
-	err := app.readJSON(w, r, &input)
+	err = app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
@@ -40,11 +46,7 @@ func (app *App) createShorteningFromURLHandler(w http.ResponseWriter, r *http.Re
 
 	shorten := model.GenerateShortening()
 
-	baseURL := fmt.Sprintf("http://%s:%s", app.Config.IpAdress, app.Config.HTTPServer.Port)
-
-	shorterning := &model.Shortening{
-		OriginalURL: input.OriginalURL,
-	}
+	baseURL := fmt.Sprintf("http://%s:%s", app.Config.HTTPServer.IpAdress, app.Config.HTTPServer.Port)
 
 	shortURL, err := model.PrependBaseURL(baseURL, shorten)
 	if err != nil {
@@ -52,6 +54,19 @@ func (app *App) createShorteningFromURLHandler(w http.ResponseWriter, r *http.Re
 		app.badRequestResponse(w, r, err)
 		return
 	}
+
+	shorterning := &model.Shortening{
+		Identifier:  shorten,
+		OriginalURL: input.OriginalURL,
+		UserID:      userID,
+	}
+
+	err = app.Storage.Shortenings.SaveUserShortening(shorterning)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
 	headers := make(http.Header)
 	headers.Set("Location", fmt.Sprintf("api/v1/shorternings/%s", shorterning.Identifier))
 

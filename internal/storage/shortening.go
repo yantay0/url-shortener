@@ -214,3 +214,16 @@ func (s *ShorteningsStorage) GetUserAllShortenings(userID int64) ([]*model.Short
 
 	return shortenings, nil
 }
+
+func (s *ShorteningsStorage) SaveUserShortening(shortening *model.Shortening) error {
+	query := `
+		INSERT INTO shortening (identifier, original_url, user_id)
+		VALUES ($1, $2, $3)
+		RETURNING identifier, created_at, version`
+
+	args := []interface{}{shortening.Identifier, shortening.OriginalURL, shortening.UserID}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	return s.DB.QueryRowContext(ctx, query, args...).Scan(&shortening.Identifier, &shortening.CreatedAt, &shortening.Version)
+}

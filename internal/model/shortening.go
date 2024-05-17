@@ -13,7 +13,6 @@ const alphabet = "ynAJfoSgdXHB5VasEMtcbPCr1uNZ4LG723ehWkvwYR6KpxjTm8iQUFqz9D"
 
 var (
 	alphabetLen = uint32(len(alphabet))
-	id          = uuid.New().ID()
 )
 
 type Shortening struct {
@@ -25,10 +24,14 @@ type Shortening struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
+// Generate a new unique ID for each shortening operation
 func GenerateShortening() string {
+	// Use uuid.New().String() to generate a unique ID
+	uniqueID := uuid.New().ID()
+
 	var (
 		digits  []uint32
-		num     = id
+		num     = uint32(uniqueID) // Convert the unique ID to a uint32 for processing
 		builder strings.Builder
 	)
 
