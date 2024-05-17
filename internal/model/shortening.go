@@ -5,12 +5,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/yantay0/url-shortener/internal/util"
 )
 
 const alphabet = "ynAJfoSgdXHB5VasEMtcbPCr1uNZ4LG723ehWkvwYR6KpxjTm8iQUFqz9D"
 
-var alphabetLen = uint32(len(alphabet))
+var (
+	alphabetLen = uint32(len(alphabet))
+	id          = uuid.New().ID()
+)
 
 type Shortening struct {
 	Identifier  string    `json:"identifier"`
@@ -21,7 +25,7 @@ type Shortening struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
-func GenerateShortURL(id uint32) string {
+func GenerateShortening() string {
 	var (
 		digits  []uint32
 		num     = id

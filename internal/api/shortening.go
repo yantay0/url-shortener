@@ -12,7 +12,7 @@ import (
 
 func (app *App) CreateShorterningHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		OriginalURL string `json:"original_shorterning"`
+		OriginalURL string `json:"original_url"`
 		Identifier  string `json:"identifier"`
 		UserID      int64  `json:"user_id"`
 	}

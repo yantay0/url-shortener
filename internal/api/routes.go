@@ -23,7 +23,8 @@ func (app *App) Routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, BASE_URL+"/users", app.registerUserHandler)
 	router.HandlerFunc(http.MethodPut, BASE_URL+"/users/activated", app.activateUserHandler)
 
-	router.HandlerFunc(http.MethodGet, BASE_URL+"/users/:id/shortenings", app.requirePermission("shortenings:read", app.ListUserUrlsHandler))
+	router.HandlerFunc(http.MethodGet, BASE_URL+"/users/:id/shortenings", app.requirePermission("shortenings:read", app.listUserShorteningsHandler))
+	router.HandlerFunc(http.MethodPost, BASE_URL+"/users/:id/shortenings", app.createShorteningFromURLHandler)
 
 	router.HandlerFunc(http.MethodPost, BASE_URL+"/tokens/authentication", app.createAuthenticationTokenHandler)
 
