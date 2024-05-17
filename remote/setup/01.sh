@@ -75,7 +75,7 @@ sudo -i -u postgres psql -c "ALTER DATABASE url_shortener OWNER TO url_shortener
 # Add a DSN for connecting to the url_shortener database to the system-wide environment
 # variables in the /etc/environment file.
 echo "URL_SHORTENER_DB_DSN='postgres://url_shortener:${DB_PASSWORD}@localhost/url_shortener?sslmode=disable'" >> /etc/environment
-echo "CONFIG_PATH='/home/url_shortener/url-shortener/api/internal/config/prod.yaml'" >> /etc/environment
+echo "CONFIG_PATH='/home/url_shortener/api/internal/config/prod.yaml'" >> /etc/environment
 
 
 # Install Caddy (see https://caddyserver.com/docs/install#debian-ubuntu-raspbian).
