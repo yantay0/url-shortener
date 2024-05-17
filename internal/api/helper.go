@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gorilla/mux"
 	"github.com/julienschmidt/httprouter"
 	"github.com/yantay0/url-shortener/internal/validator"
 )
@@ -129,15 +128,4 @@ func (app *App) background(fn func()) {
 
 		fn()
 	}()
-}
-
-func (app *App) readStringParam(r *http.Request, paramName string) (string, error) {
-	vars := mux.Vars(r)
-	value := vars["identifier"]
-
-	if value == "" {
-		return "", errors.New("missing required parameter: " + paramName)
-	}
-
-	return value, nil
 }

@@ -1,8 +1,6 @@
 package api
 
 import (
-	"net/http"
-
 	"github.com/yantay0/url-shortener/internal/config"
 	"github.com/yantay0/url-shortener/internal/lib/logger/jsonlog"
 	"github.com/yantay0/url-shortener/internal/mailer"
@@ -23,10 +21,4 @@ func NewApp(cfg config.Config, logger *jsonlog.Logger, storage storage.Storage, 
 		Storage: storage,
 		Mailer:  mailer,
 	}
-}
-
-func (app *App) catchAllRequestHandler(w http.ResponseWriter, r *http.Request, path string) {
-	// Log the request or perform other actions
-	w.WriteHeader(http.StatusNotFound)
-	w.Write([]byte("Not Found"))
 }
