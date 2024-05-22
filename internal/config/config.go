@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -51,7 +50,6 @@ func MustLoad() *Config {
 		log.Fatal("CONFIG_PATH is not set")
 	}
 
-	check(configPath)
 	// check if file exists
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		log.Fatalf("config file does not exist: %s", configPath)
@@ -64,33 +62,4 @@ func MustLoad() *Config {
 	}
 
 	return &cfg
-}
-
-func check(filePath string) {
-
-	fileStats, err := os.Stat(filePath)
-	if err != nil {
-		log.Fatalf("file does not exist: %v", err)
-	}
-
-	permissions := fileStats.Mode().Perm()
-	if permissions != 0o600 {
-		log.Fatalf("incorrect permisisons %s (0%o), must be 0600 for '%s'", permissions, permissions, filePath)
-	}
-
-	// check for specific permissions: user read, user write
-	if permissions&0b110000000 == 0b110000000 {
-		fmt.Printf("user has read and write permission\n")
-	}
-
-	// check for specific permission: user write
-	if permissions&0b010000000 == 0b010000000 {
-		fmt.Printf("user has write permission\n")
-	}
-
-	// check for specific permission: user read
-	// breakup for better readability
-	if permissions&0b100_000_000 == 0b100_000_000 {
-		fmt.Printf("user has read permission\n")
-	}
 }
