@@ -22,7 +22,23 @@ POST /urls
 GET /urls/:id
 PUT /urls/:id
 DELETE /urls/:id
+
+GET /healthcheck
+
+GET /shortenings
+GET /shortenings/:identifier
+PATCH /shortenings/:identifier
+DELETE /shortenings/:identifier
+
+POST /users
+PUT /users/activated
+GET /users/:id/shortenings
+POST /users/:id/shortenings
+POST /tokens/authentication
+
 ```
+
+
 
 ## Structure of entities in the database
 ![image](https://github.com/yantay0/url-shortener/assets/93054482/23a90482-9185-48ec-8b68-7c5887d60a23)
